@@ -1,0 +1,86 @@
+parameters:
+  - name: "serviceName"
+    default: "meteo.frontend"
+    type: string
+
+jobs:
+  - job:
+    displayName: ${{ parameters.serviceName }} build and publish
+
+    variables:
+      frontendRoot: "$(Build.SourcesDirectory)/fiek-met/frontend"
+      CI: false
+
+    steps:
+      - checkout: self
+      - checkout: cicd
+
+      - task: NodeTool@0
+        inputs:
+          versionSpec: "12.14.x"
+        displayName: "Install Node.js 12.14.x"
+
+      - script: |
+          set -e
+          npm install yarn -g
+          yarn install
+        displayName: "Install yarn"
+        workingDirectory: $(frontendRoot)
+
+      - script: |
+          set -e
+          echo "REACT_APP_API_URL=%REACT_APP_API_URL%" > .env
+          yarn generate-api-client
+          yarn build
+        displayName: "Build application"
+        workingDirectory: $(frontendRoot)
+
+      - script: |
+          yarn test --passWithNoTests --coverage
+        displayName: "Run tests"
+        workingDirectory: $(frontendRoot)
+
+      - task: ArchiveFiles@2
+        displayName: "Create build artifact (*.zip)"
+        inputs:
+          rootFolderOrFile: "$(frontendRoot)/build"
+          includeRootFolder: false
+          archiveType: "zip"
+          archiveFile: "$(Build.ArtifactStagingDirectory)/${{ parameters.serviceName }}_$(Build.BuildId).zip"
+          replaceExistingArchive: true
+
+      - task: PublishBuildArtifacts@1
+        inputs:
+          PathtoPublish: "$(Build.ArtifactStagingDirectory)"
+          ArtifactName: "${{ parameters.serviceName }}"
+          publishLocation: "Container"
+
+      - task: Bash@3
+        displayName: "Get commit hash"
+        inputs:
+          targetType: "inline"
+          script: |
+            GIT_SHA=$(git rev-parse --short=8 HEAD)
+            echo "##vso[task.setvariable variable=GIT_SHA]$GIT_SHA"
+            echo "##vso[build.updatebuildnumber]$GIT_SHA"
+          workingDirectory: $(Build.SourcesDirectory)/fiek-met
+
+      - task: CopyFiles@2
+        displayName: copy cicd files to publish
+        inputs:
+          sourceFolder: "$(Build.SourcesDirectory)/meteo-cicd/frontend"
+          Contents: "**"
+          targetFolder: $(frontendRoot)
+          OverWrite: true
+
+      - task: Docker@2
+        displayName: METEO METEO-ONPREM Push frontend docker image to Azure repository
+        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), eq( variables['Build.SourceBranchName'], 'master' ))
+        inputs:
+          containerRegistry: "MeteoCR"
+          repository: "${{ parameters.serviceName }}"
+          command: "buildAndPush"
+          Dockerfile: "$(frontendRoot)/Dockerfile"
+          tags: |
+            latest
+            $(GIT_SHA)

@@ -1,0 +1,17 @@
+version: '3.4'
+services:
+  azuredevops-agent:
+    image: meteocr.azurecr.io/azuredevops-agent:0.0.1
+    container_name: azuredevops-agent
+    env_file: .agent_env
+    volumes:
+      - meteo:/opt/meteo
+    restart: always
+
+volumes:
+  meteo:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /opt/meteo

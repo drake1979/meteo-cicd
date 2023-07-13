@@ -1,0 +1,133 @@
+parameters:
+  - name: "serviceName"
+    default: "meteo.backend.api"
+    type: string
+
+jobs:
+  - job:
+    displayName: ${{ parameters.serviceName }} build and publish
+
+    variables:
+      solution: "**/*.sln"
+      dotNetFramework: "net6.0"
+      dotNetVersion: "6.0.x"
+      buildPlatform: "Any CPU"
+      buildConfiguration: "Release"
+      dotnetRoot: "$(Build.SourcesDirectory)/fiek-met/backend"
+      PostgrePort: "5432"
+      PostgreDatabase: "ci_integrationtestdb_for_build_$(Build.BuildId)"
+
+    steps:
+      - checkout: self
+      - checkout: cicd
+
+      - task: UseDotNet@2
+        displayName: "Install .NET Core sdk 6.0.x on the build agent"
+        inputs:
+          packageType: sdk
+          version: $(dotNetVersion)
+          installationPath: $(Agent.ToolsDirectory)/dotnet
+
+      - task: PowerShell@2
+        displayName: "Install dotnet tools"
+        inputs:
+          targetType: "inline"
+          script: "dotnet tool restore"
+          workingDirectory: $(dotnetRoot)
+
+      - task: Bash@3
+        displayName: "Install libnetcdf-dev"
+        inputs:
+          targetType: "inline"
+          script: |
+            sudo apt update
+            sudo apt-get install libnetcdf-dev
+          workingDirectory: $(dotnetRoot)
+
+      - script: dotnet build --configuration $(buildConfiguration) /p:TreatWarningsAsErrors=true /warnaserror
+        displayName: "Backend - Build solution"
+        workingDirectory: $(dotnetRoot)
+
+      - task: DotNetCoreCLI@2
+        displayName: Run C# - Unit & Component tests
+        inputs:
+          command: "test"
+          projects: "$(dotnetRoot)/**/*.Test*.csproj"
+          arguments: "--configuration $(BuildConfiguration) /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura"
+          nobuild: true
+
+      - task: Bash@3
+        displayName: Drop test database
+        condition: succeededOrFailed()
+        inputs:
+          targetType: "inline"
+          script: |
+            set -e
+            psql "host=$(PostgreHost) port=5432 dbname=postgres user=$(PostgreUser) password=$(PostgrePwd) sslmode=require" --command='DROP DATABASE IF EXISTS $(PostgreDatabase) WITH (FORCE)'
+
+      - task: Bash@3
+        displayName: "Get commit hash"
+        inputs:
+          targetType: "inline"
+          script: |
+            GIT_SHA=$(git rev-parse --short=8 HEAD)
+            echo "##vso[task.setvariable variable=GIT_SHA]$GIT_SHA"
+            echo "##vso[build.updatebuildnumber]$GIT_SHA"
+          workingDirectory: $(dotnetRoot)
+
+      - task: CopyFiles@2
+        displayName: copy cicd files to publish
+        inputs:
+          sourceFolder: "$(Build.SourcesDirectory)/meteo-cicd/backend"
+          contents: "**"
+          targetFolder: $(dotnetRoot)
+          OverWrite: true
+
+      - task: Docker@2
+        displayName: ESCO-METEO Push backend API docker image to Azure repository
+        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), eq( variables['Build.SourceBranchName'], 'esco-master' ))
+        inputs:
+          containerRegistry: "Esco-MeteoCR"
+          repository: "${{ parameters.serviceName }}"
+          command: "buildAndPush"
+          Dockerfile: "$(dotnetRoot)/Dockerfile"
+          tags: |
+            latest
+            $(GIT_SHA)
+
+      - task: Docker@2
+        displayName: METEO Push backend API docker image to Azure repository
+        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'),eq( variables['Build.SourceBranchName'], 'master' ))
+        inputs:
+          containerRegistry: "MeteoCR"
+          repository: "${{ parameters.serviceName }}"
+          command: "buildAndPush"
+          Dockerfile: "$(dotnetRoot)/Dockerfile"
+          tags: |
+            latest
+            $(GIT_SHA)
+
+      - task: Docker@2
+        displayName: METEO-ONPREM build backend API docker image to Azure repository
+        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'),eq( variables['Build.SourceBranchName'], 'master' ))
+        inputs:
+          containerRegistry: "MeteoCR"
+          repository: "${{ parameters.serviceName }}.onprem"
+          command: "Build"
+          Dockerfile: "$(dotnetRoot)/Dockerfile.onprem"
+          arguments: "--build-arg TAG=$(GIT_SHA)"
+          tags: |
+            latest
+            $(GIT_SHA)
+
+      - task: Docker@2
+        displayName: METEO-ONPREM push backend API docker image to Azure repository
+        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'),eq( variables['Build.SourceBranchName'], 'master' ))
+        inputs:
+          containerRegistry: "MeteoCR"
+          repository: "${{ parameters.serviceName }}.onprem"
+          command: "Push"
+          Dockerfile: "$(dotnetRoot)/Dockerfile.onprem"
+          tags: |
+            latest
+            $(GIT_SHA)

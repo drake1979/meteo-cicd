@@ -1,0 +1,26 @@
+version: '3.4'
+services:
+  meteo.frontend:
+    container_name: meteo.frontend
+    image: meteocr.azurecr.io/meteo.frontend:%IMAGE_TAG%
+    restart: always
+    environment:
+      - REACT_APP_API_URL=$REACT_APP_API_URL
+    ports:
+      - 8080:80
+    networks:
+      - fiek-met
+  meteo.frontend.mvmi:
+    container_name: meteo.frontend.mvmi
+    image: fiek.frontend:%IMAGE_TAG%
+    restart: always
+    environment:
+      - REACT_APP_API_URL=$REACT_APP_API_URL_MVMI
+    ports:
+      - 9090:80
+    networks:
+      - fiek-met
+
+networks:
+  fiek-met:
+    external: true

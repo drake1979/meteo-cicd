@@ -1,0 +1,68 @@
+version: '3.4'
+services:
+  meteo.backend.api:
+    container_name: meteo.backend.api
+    image: meteocr.azurecr.io/meteo.backend.api:%IMAGE_TAG%
+    restart: always
+    ports:
+      - 53135:80
+    environment:
+      - TZ=$TZ
+      - ConnectionStrings__DefaultConnection=host=$DB_HOST;database=$DB_NAME;user id=$DB_USER;password=$DB_PASSWORD
+      - PythonServiceSettings__Url=http://meteo.backend.python:5000
+      - CorsOrigins=$CORS_URL
+      - ForecastBlobSettings__EnableOmsz=false
+      - ForecastBlobSettings__EnableIbm=false
+      - ForecastBlobSettings__EnableClimaCell=false
+      - ForecastBlobSettings__EnableSolcast=false
+      - ForecastBlobSettings__EnableAromeOmsz=false
+      - ForecastBlobSettings__EnableSteadySun=false
+      - ClimaCellDataSyncSchedule__IsEnable=false
+      - IBMForecastDataSyncSchedule__IsEnable=false
+      - OMSZDataSyncSchedule__IsEnable=false
+      - SteadySunForecastDataSyncSchedule__IsEnable=false
+      - MekAuthSettings__TestMode=true
+      - Solcast__ApiKey=$SOLCAST_APIKEY
+      - SolcastForecastDataSyncSchedule__LongTermRefreshCron=50 10 * * *
+      - SolcastForecastDataSyncSchedule__ShortTermRefreshCron= 10,25,40,55 * * * *
+      - AromeOMSZDataSyncSchedule__SixHoursRefreshCron=30 2/6 * * *
+      - Hangfire__WorkerCount=$HANGFIRE_WORKERCOUNT
+      - Serilog__MinimumLevel=Information
+      - CombinedEstimateSettings__FolderPath=CombinedEstimateData
+      - SolarTimesSettings__SunriseShift=-9000000
+      - SolarTimesSettings__SunsetShift=9000000
+    networks:
+      - fiek-met
+    volumes:
+      - forecast_data:/app/ForecastData
+      - combined_estimate_data:/app/CombinedEstimateData
+      - past_combined:/app/PastCombinedEstimateData
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "2g"
+        max-file: "100"
+        compress: "true"
+
+networks:
+  fiek-met:
+    external: true
+volumes:
+  forecast_data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /forecast_data/forecast_data
+  combined_estimate_data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /forecast_data/combined_estimate_data
+  past_combined:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /forecast_data/past_combined

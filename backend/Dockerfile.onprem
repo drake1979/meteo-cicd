@@ -1,0 +1,7 @@
+ARG TAG
+
+FROM meteocr.azurecr.io/meteo.backend.api:${TAG} AS base
+
+#Install Stormshield firewall CA certificate
+COPY stormshieldCA.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates

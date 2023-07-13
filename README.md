@@ -1,20 +1,57 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# Onprem docker-compose pipeline-ból
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+## Koncepció
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+  - a pipline a build alapján kicseréli a compose fájlban az image taget
+  - a pipeline lemásolja a hostra a megfelelő compose fájlt
+  - restartolja/indítja a compose fájl alapján a docker image-t
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+## Előfeltételek
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+  - a hoston ott vannak a compose fájlhoz tartozó env fájlok!
+
+## Azure Agent
+
+Az agent containerbe fel van mountolva `/opt/meteo/mount`:
+
+  - ebbe van a fifo fájl, amibe echo-zva van a parancs
+  - ide másolódóik a docker-compose yml fájl
+
+### Agent build
+
+azdevops-agent mappában vannak a szükséges fájlok.
+
+  - Dockerfile felhasználásával build
+  - docker-compose.yml futtatható az agent
+  - .agent_env fájl szükséges hozzá, melynek tartalmaznia kell:
+```
+AZP_URL=https://dev.azure.com/grapesolutions
+AZP_TOKEN=<ide egy Personal Access Token kell>
+AZP_POOL=<ide az agent pool neve>
+```
+## Host előkészítése
+
+A hoston futó konténerek fifo-n (named pipe) keresztül vannak kezelve.
+  - kell egy nem sudo (normál) user aki olvassa a fifo-t `sudo useradd azagent`
+  - ne tudjon belépni az user `sudo usermod -L azagent`
+  - a usernek benne kell lennie a "docker" csoportban, hogy sudo nélkül tudjon konténert kezelni `sudo usermod -aG docker azagent`
+  - a docker login a user nevében (is) kell, emiatt kell home
+  - fifo lognak fájl `sudo touch /opt/meteo/fifo_out.log && sudo chown azagent /opt/meteo/fifo_out.log`
+  - az `/opt/meteo` mappában minen elemnek a group tulajdonosa "docker" legyen, különben sudo kell a docker parancsokhoz `sudo chgrp docker -R /opt/meteo`
+
+## Fifo létrehozás
+
+```
+mkfifo /opt/meteo/mount/meteo-pipe
+chown azagent /opt/meteo/listenpipe.sh
+chmod +x /opt/meteo/listenpipe.sh
+chown azagent /opt/meteo/listenpipe.sh
+```
+A listenpipe.sh tartalmazza a pipe kiolvasásást és futtatását. Hogy ez mindig fusson:
+`sudo -u azagent crontab -e`
+
+A crontab szerkesztőbe a következő kell:
+`@reboot /opt/meteo/listenpipe.sh`
+
+A sh script futtatása restart nélül a háttérben:
+`sudo -u azagent nohup sh /opt/meteo/listenpipe.sh &`
