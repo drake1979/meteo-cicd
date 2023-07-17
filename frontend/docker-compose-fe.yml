@@ -12,7 +12,7 @@ services:
       - fiek-met
   meteo.frontend.mvmi:
     container_name: meteo.frontend.mvmi
-    image: fiek.frontend:%IMAGE_TAG%
+    image: meteocr.azurecr.io/meteo.frontend:%IMAGE_TAG%
     restart: always
     environment:
       - REACT_APP_API_URL=$REACT_APP_API_URL_MVMI
