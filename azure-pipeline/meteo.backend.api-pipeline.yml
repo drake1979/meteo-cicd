@@ -85,7 +85,7 @@ jobs:
 
       - task: Docker@2
         displayName: ESCO-METEO Push backend API docker image to Azure repository
-        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), eq( variables['Build.SourceBranchName'], 'esco-master' ))
+        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
         inputs:
           containerRegistry: "Esco-MeteoCR"
           repository: "${{ parameters.serviceName }}"
@@ -97,7 +97,7 @@ jobs:
 
       - task: Docker@2
         displayName: METEO Push backend API docker image to Azure repository
-        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'),eq( variables['Build.SourceBranchName'], 'master' ))
+        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
         inputs:
           containerRegistry: "MeteoCR"
           repository: "${{ parameters.serviceName }}"
@@ -109,7 +109,7 @@ jobs:
 
       - task: Docker@2
         displayName: METEO-ONPREM build backend API docker image to Azure repository
-        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'),eq( variables['Build.SourceBranchName'], 'master' ))
+        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
         inputs:
           containerRegistry: "MeteoCR"
           repository: "${{ parameters.serviceName }}.onprem"
@@ -122,7 +122,7 @@ jobs:
 
       - task: Docker@2
         displayName: METEO-ONPREM push backend API docker image to Azure repository
-        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'),eq( variables['Build.SourceBranchName'], 'master' ))
+        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
         inputs:
           containerRegistry: "MeteoCR"
           repository: "${{ parameters.serviceName }}.onprem"

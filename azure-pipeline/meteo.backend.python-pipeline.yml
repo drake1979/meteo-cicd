@@ -52,7 +52,7 @@ jobs:
 
       - task: Docker@2
         displayName: METEO Push PythonService docker image to Azure repository
-        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranchName'], 'master'))
+        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
         inputs:
           containerRegistry: "MeteoCR"
           repository: "${{ parameters.serviceName }}"
@@ -64,7 +64,7 @@ jobs:
 
       - task: Docker@2
         displayName: ESCO-METEO Push PythonService docker image to Azure repository
-        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranchName'], 'esco-master'))
+        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
         inputs:
           containerRegistry: "Esco-MeteoCR"
           repository: "${{ parameters.serviceName }}"
