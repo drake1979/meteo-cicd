@@ -2,7 +2,7 @@ version: '3.4'
 services:
   meteo.backend.api:
     container_name: meteo.backend.api
-    image: meteocr.azurecr.io/meteo.backend.api:%IMAGE_TAG%
+    image: meteocr.azurecr.io/meteo.backend.api.onprem:%IMAGE_TAG%
     restart: always
     ports:
       - 53135:80
