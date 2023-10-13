@@ -8,7 +8,17 @@ services:
       - 5000:5000
     networks:
       - fiek-met
+    volumes:
+      - combined_train_params:/usr/src/app/combined_train_params
 
 networks:
   fiek-met:
     external: true
+
+volumes:
+  combined_train_params:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /forecast_data/combined_train_params

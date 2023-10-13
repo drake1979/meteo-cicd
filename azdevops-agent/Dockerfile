@@ -15,6 +15,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommend
     software-properties-common \
     dos2unix
 
+#Install Stormshield firewall CA certificate
+COPY stormshieldCA.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+
 # Azure Agent install from documentation
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
