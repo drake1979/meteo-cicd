@@ -10,6 +10,15 @@ services:
       - fiek-met
     volumes:
       - combined_train_params:/usr/src/app/combined_train_params
+    deploy:
+      resources:
+        limits:
+          cpus: '8'
+          memory: 12G
+        reservations:
+          cpus: '4'
+          memory: 4G
+    oom_kill_disable: true
 
 networks:
   fiek-met:
