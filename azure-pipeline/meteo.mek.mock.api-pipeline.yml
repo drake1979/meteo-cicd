@@ -9,7 +9,7 @@ jobs:
 
   variables:
     buildConfiguration: "Release"
-    dotnetRoot: "$(Build.SourcesDirectory)/Meteo.Mek.Mock"
+    dotnetRoot: "$(Build.SourcesDirectory)/meteo-mek-mock/Meteo.Mek.Mock"
 
   steps:
   - checkout: self
@@ -42,13 +42,13 @@ jobs:
       workingDirectory: $(dotnetRoot)
 
   - task: Docker@2
-    displayName: METEO Push backend API docker image to Azure repository
+    displayName: METEO Push MEK MOCK API docker image to Azure repository
     condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
     inputs:
       containerRegistry: "MeteoCR"
       repository: "${{ parameters.serviceName }}"
       command: "buildAndPush"
-      Dockerfile: "$(dotnetRoot)/Dockerfile"
+      Dockerfile: "$(Build.SourcesDirectory)/meteo-mek-mock/Dockerfile"
       tags: |
         latest
         $(GIT_SHA)
