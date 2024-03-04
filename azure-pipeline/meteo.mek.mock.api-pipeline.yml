@@ -9,7 +9,7 @@ jobs:
 
   variables:
     buildConfiguration: "Release"
-    dotnetRoot: "$(Build.SourcesDirectory)/Meteo.Mek.Mock"
+    dotnetRoot: "$(Build.SourcesDirectory)/meteo-mek-mock/Meteo.Mek.Mock"
 
   steps:
   - checkout: self
