@@ -32,6 +32,7 @@ jobs:
 
   - task: Bash@3
     displayName: "Get commit hash"
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
     inputs:
       targetType: "inline"
       script: |
@@ -39,14 +40,6 @@ jobs:
         echo "##vso[task.setvariable variable=GIT_SHA]$GIT_SHA"
         echo "##vso[build.updatebuildnumber]$GIT_SHA"
       workingDirectory: $(dotnetRoot)
-
-  - task: CopyFiles@2
-    displayName: copy cicd files to publish
-    inputs:
-      sourceFolder: "$(Build.SourcesDirectory)/meteo-cicd/mek-mock"
-      contents: "**"
-      targetFolder: $(dotnetRoot)
-      OverWrite: true
 
   - task: Docker@2
     displayName: METEO Push backend API docker image to Azure repository
