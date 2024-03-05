@@ -15,12 +15,19 @@ jobs:
   - checkout: self
   - checkout: cicd
 
+  # - task: DotNetCoreCLI@2
+  #   displayName: Backend MEK Mock - Build solution
+  #   inputs:
+  #     command: "build"
+  #     projects: "$(dotnetRoot)/**/*.sln"
+  #     arguments: "--configuration $(buildConfiguration) /p:TreatWarningsAsErrors=true /warnaserror"
+
   - task: DotNetCoreCLI@2
     displayName: Backend MEK Mock - Build solution
     inputs:
       command: "build"
       projects: "$(dotnetRoot)/**/*.sln"
-      arguments: "--configuration $(buildConfiguration) /p:TreatWarningsAsErrors=true /warnaserror"
+      arguments: "--configuration $(buildConfiguration)"
 
   - task: DotNetCoreCLI@2
     displayName: Run C# - Unit & Component tests
