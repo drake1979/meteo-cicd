@@ -1,0 +1,19 @@
+ARG IMAGE_TAG = a0a0a0a0
+
+FROM meteocr.azurecr.io/meteo.backend.api.onprem:$IMAGE_TAG
+
+RUN apt-get install wget && \
+    wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
+    dpkg -i packages-microsoft-prod.deb && \
+    rm packages-microsoft-prod.deb
+
+RUN apt-get update && apt-get install mc dotnet-sdk-6.0 -y
+RUN dotnet tool install --global dotnet-counters && dotnet tool install --global dotnet-dump
+RUN apt-get --reinstall install aspnetcore-runtime-6.0 -y
+
+#Install Netlock CA certificate
+COPY trustev3.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+
+ENTRYPOINT [ "/entrypoint.sh" ]
+CMD ["dotnet", "FIEK.MET.Backend.Api.dll"]
