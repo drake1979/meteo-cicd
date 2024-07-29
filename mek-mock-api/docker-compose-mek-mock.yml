@@ -1,0 +1,21 @@
+version: '3.4'
+services:
+  meteo.mek.mock.api:
+    container_name: meteo.mek.mock.api
+    image: meteocr.azurecr.io/meteo.mek.mock.api:%IMAGE_TAG%
+    restart: always
+    environment:
+      - Logging__LogLevel__Default=$MEK_MOCK_LOGLEVEL
+      - MeteoOptions__MeteoUrl=$MEK_MOCK_METEOURL
+      - MeteoOptions__AuthUsername=$MEK_MOCK_METEO_AUTHUSERNAME
+      - MeteoOptions__AuthPassword=$MEK_MOCK_METEO_AUTHPASSWORD
+      - MekOptions__AuthUsername=$MEK_MOCK_MEK_AUTHUSERNAME
+      - MeteoOptions__AuthPassword=$MEK_MOCK_MEK_AUTHPASSWORD
+    ports:
+      - 54321:80
+    networks:
+      - fiek-met
+
+networks:
+  fiek-met:
+    external: true
