@@ -10,4 +10,6 @@ else
    echo " ===> NO EXTERNAL CERTIFICATE INSTALLED"
 fi
 
+service ssh start
+
 exec "$@"

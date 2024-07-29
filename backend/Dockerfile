@@ -4,6 +4,18 @@ RUN apt-get update && apt-get install libnetcdf-dev dos2unix -y
 EXPOSE 80
 EXPOSE 443
 
+##################
+# https://learn.microsoft.com/en-us/azure/app-service/configure-custom-container?tabs=debian&pivots=container-linux#enable-ssh
+##################
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends dialog \
+    && apt-get install -y --no-install-recommends openssh-server \
+    && echo "root:Docker!" | chpasswd \
+    && chmod u+x ./entrypoint.sh
+COPY sshd_config /etc/ssh/
+EXPOSE 2222
+##################
+
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 COPY FIEK.MET.Backend.sln .
