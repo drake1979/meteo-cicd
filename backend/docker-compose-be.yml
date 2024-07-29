@@ -8,6 +8,8 @@ services:
       - 53135:80
     environment:
       - TZ=$TZ
+      - INSTALL_FW_CERTIFICATE=$INSTALL_CERT
+        # value "onprem" for install, anything else for dont
       - ConnectionStrings__DefaultConnection=host=$DB_HOST;database=$DB_NAME;user id=$DB_USER;password=$DB_PASSWORD
       - PythonServiceSettings__Url=http://meteo.backend.python:5000
       - CorsOrigins=$CORS_URL
@@ -39,12 +41,22 @@ services:
       - forecast_data:/app/ForecastData
       - combined_estimate_data:/app/CombinedEstimateData
       - past_combined:/app/PastCombinedEstimateData
+      - /etc/pki/ca-trust/source/anchors/stormshieldCA.crt:/usr/local/share/ca-certificates/stormshieldCA.crt:ro
     logging:
       driver: "json-file"
       options:
         max-size: "2g"
         max-file: "100"
         compress: "true"
+    deploy:
+      resources:
+        limits:
+          cpus: '8'
+          memory: 12G
+        reservations:
+          cpus: '4'
+          memory: 4G
+    oom_kill_disable: true
 
 networks:
   fiek-met:
