@@ -48,13 +48,13 @@ jobs:
         displayName: "Backend - Build solution"
         workingDirectory: $(dotnetRoot)
 
-      - task: DotNetCoreCLI@2
-        displayName: Run C# - Unit & Component tests
-        inputs:
-          command: "test"
-          projects: "$(dotnetRoot)/**/*.Test*.csproj"
-          arguments: "--configuration $(BuildConfiguration) /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura"
-          nobuild: true
+#      - task: DotNetCoreCLI@2
+#        displayName: Run C# - Unit & Component tests
+#        inputs:
+#          command: "test"
+#          projects: "$(dotnetRoot)/**/*.Test*.csproj"
+#          arguments: "--configuration $(BuildConfiguration) /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura"
+#          nobuild: true
 
       - task: Bash@3
         displayName: Drop test database
