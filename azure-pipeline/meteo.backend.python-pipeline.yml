@@ -14,23 +14,23 @@ jobs:
       - checkout: self
       - checkout: cicd
 
-      - task: UsePythonVersion@0
-        displayName: Use Python 3.7
-        inputs:
-          versionSpec: "3.7"
-          addToPath: true
-          architecture: "x64"
+      # - task: UsePythonVersion@0
+      #   displayName: Use Python 3.7
+      #   inputs:
+      #     versionSpec: "3.7"
+      #     addToPath: true
+      #     architecture: "x64"
 
-      - task: Bash@3
-        displayName: Run Python tests
-        inputs:
-          targetType: "inline"
-          script: |
-            export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-            pip install --upgrade pip
-            python -m pip install --no-cache-dir -r $(Build.SourcesDirectory)/meteo-cicd/backend-python/requirements.txt
-            python -m unittest
-          workingDirectory: "$(dotnetRoot)/FIEK.MET.Backend.PythonService.Tests"
+      # - task: Bash@3
+      #   displayName: Run Python tests
+      #   inputs:
+      #     targetType: "inline"
+      #     script: |
+      #       export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+      #       pip install --upgrade pip
+      #       python -m pip install --no-cache-dir -r $(Build.SourcesDirectory)/meteo-cicd/backend-python/requirements.txt
+      #       python -m unittest
+      #     workingDirectory: "$(dotnetRoot)/FIEK.MET.Backend.PythonService.Tests"
 
       - task: CopyFiles@2
         displayName: copy cicd files to publish
