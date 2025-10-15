@@ -30,6 +30,7 @@ jobs:
       - script: |
           set -e
           echo "REACT_APP_API_URL=%REACT_APP_API_URL%" > .env
+          echo "REACT_APP_ODIN_URL=%REACT_APP_ODIN_URL%" > .env
           yarn generate-api-client
           yarn build
         displayName: "Build application"
