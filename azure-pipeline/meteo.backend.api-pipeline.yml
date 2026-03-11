@@ -20,7 +20,7 @@ jobs:
         fetchDepth: 1
 
       - task: Bash@3
-        displayName: Install .NET 6 SDK manually
+        displayName: Install .NET 8 SDK manually
         inputs:
           targetType: inline
           script: |
@@ -35,7 +35,7 @@ jobs:
 
             chmod +x dotnet-install.sh
             ./dotnet-install.sh \
-              --channel 6.0 \
+              --channel 8.0 \
               --install-dir "$DOTNET_ROOT"
             echo "##vso[task.prependpath]$DOTNET_ROOT"
 
