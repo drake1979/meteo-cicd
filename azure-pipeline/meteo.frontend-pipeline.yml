@@ -63,7 +63,7 @@ jobs:
         inputs:
           targetType: inline
           script: |
-            yarn test --passWithNoTests --coverage
+            CI=true yarn test --passWithNoTests --coverage
           workingDirectory: $(frontendRoot)
 
       - task: ArchiveFiles@2
