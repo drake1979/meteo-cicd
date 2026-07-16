@@ -78,7 +78,7 @@ jobs:
         displayName: METEO METEO-ONPREM Push frontend docker image to Azure repository
         condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
         inputs:
-          containerRegistry: "MeteoCR"
+          containerRegistry: "svc-meteo-crmeteocommongwc01"
           repository: "${{ parameters.serviceName }}"
           command: "buildAndPush"
           Dockerfile: "$(frontendRoot)/Dockerfile"
