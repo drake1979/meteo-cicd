@@ -15,6 +15,14 @@ jobs:
       - checkout: self
       - checkout: cicd
 
+      - bash: |
+          nslookup nodejs.org
+          curl -v https://nodejs.org/dist/index.json
+
+      - task: UseNode@1
+        inputs:
+          version: 12.14.x
+
       - task: NodeTool@0
         inputs:
           versionSpec: "12.14.x"
