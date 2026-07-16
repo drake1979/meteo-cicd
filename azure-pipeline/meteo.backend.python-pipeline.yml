@@ -1,6 +1,6 @@
 parameters:
-  - name: "serviceName"
-    default: "meteo.backend.python"
+  - name: serviceName
+    default: meteo.backend.python
     type: string
 
 jobs:
@@ -8,42 +8,26 @@ jobs:
     displayName: ${{ parameters.serviceName }} build and publish
 
     variables:
-      dotnetRoot: "$(Build.SourcesDirectory)/fiek-met/backend"
+      dotnetRoot: $(Build.SourcesDirectory)/fiek-met/backend
 
     steps:
       - checkout: self
+        fetchDepth: 1
       - checkout: cicd
-
-      # - task: UsePythonVersion@0
-      #   displayName: Use Python 3.7
-      #   inputs:
-      #     versionSpec: "3.7"
-      #     addToPath: true
-      #     architecture: "x64"
-
-      # - task: Bash@3
-      #   displayName: Run Python tests
-      #   inputs:
-      #     targetType: "inline"
-      #     script: |
-      #       export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-      #       pip install --upgrade pip
-      #       python -m pip install --no-cache-dir -r $(Build.SourcesDirectory)/meteo-cicd/backend-python/requirements.txt
-      #       python -m unittest
-      #     workingDirectory: "$(dotnetRoot)/FIEK.MET.Backend.PythonService.Tests"
+        fetchDepth: 1
 
       - task: CopyFiles@2
-        displayName: copy cicd files to publish
+        displayName: Copy CICD files to Docker context
         inputs:
-          sourceFolder: "$(Build.SourcesDirectory)/meteo-cicd/backend-python"
+          sourceFolder: $(Build.SourcesDirectory)/meteo-cicd/backend-python
           contents: "**"
-          targetFolder: "$(dotnetRoot)/FIEK.MET.Backend.PythonService"
+          targetFolder: $(dotnetRoot)/FIEK.MET.Backend.PythonService
           OverWrite: true
 
       - task: Bash@3
-        displayName: "Get commit hash"
+        displayName: Get commit hash
         inputs:
-          targetType: "inline"
+          targetType: inline
           script: |
             GIT_SHA=$(git rev-parse --short=8 HEAD)
             echo "##vso[task.setvariable variable=GIT_SHA]$GIT_SHA"
@@ -54,22 +38,10 @@ jobs:
         displayName: METEO Push PythonService docker image to Azure repository
         condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
         inputs:
-          containerRegistry: "MeteoCR"
-          repository: "${{ parameters.serviceName }}"
-          command: "buildAndPush"
-          Dockerfile: "$(dotnetRoot)/FIEK.MET.Backend.PythonService/Dockerfile"
-          tags: |
-            latest
-            $(GIT_SHA)
-
-      - task: Docker@2
-        displayName: ESCO-METEO Push PythonService docker image to Azure repository
-        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-        inputs:
-          containerRegistry: "Esco-MeteoCR"
-          repository: "${{ parameters.serviceName }}"
-          command: "buildAndPush"
-          Dockerfile: "$(dotnetRoot)/FIEK.MET.Backend.PythonService/Dockerfile"
+          containerRegistry: svc-meteo-crmeteocommongwc01
+          repository: ${{ parameters.serviceName }}
+          command: buildAndPush
+          Dockerfile: $(dotnetRoot)/FIEK.MET.Backend.PythonService/Dockerfile
           tags: |
             latest
             $(GIT_SHA)
