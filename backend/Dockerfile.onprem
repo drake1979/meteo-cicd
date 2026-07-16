@@ -1,6 +1,6 @@
 ARG TAG
 
-FROM meteocr.azurecr.io/meteo.backend.api:${TAG} AS base
+FROM crmeteocommongwc01-gqajgqecgzh4acha.azurecr.io/meteo.backend.api:${TAG} AS base
 
 #Install Stormshield firewall CA certificate
 COPY stormshieldCA.crt /usr/local/share/ca-certificates/
