@@ -1,6 +1,6 @@
 parameters:
-  - name: "serviceName"
-    default: "meteo.frontend"
+  - name: serviceName
+    default: meteo.frontend
     type: string
 
 jobs:
@@ -8,82 +8,84 @@ jobs:
     displayName: ${{ parameters.serviceName }} build and publish
 
     variables:
-      frontendRoot: "$(Build.SourcesDirectory)/fiek-met/frontend"
-      CI: false
+      frontendRoot: $(Build.SourcesDirectory)/fiek-met/frontend
 
     steps:
       - checkout: self
+        fetchDepth: 1
       - checkout: cicd
+        fetchDepth: 1
 
-      # - bash: |
-      #     curl -w "\nDNS=%{time_namelookup}\nCONNECT=%{time_connect}\nTTFB=%{time_starttransfer}\nTOTAL=%{time_total}\n" \
-      #         -o /dev/null \
-      #         -s https://nodejs.org/dist/index.json
-
-      # - task: NodeTool@0
-      #   inputs:
-      #     versionSpec: 12.14.1
-      #     retryCountOnDownloadFails: '5'
-      #     delayBetweenRetries: '5000'
-      #   displayName: Install Node.js 12.14.1
-
-      - bash: |
-          set -euxo pipefail
-
-          NODE_VERSION=12.14.1
-          NODE_DIR="$AGENT_TEMPDIRECTORY/node"
-
-          mkdir -p "$NODE_DIR"
-
-          curl -L \
-            --connect-timeout 30 \
-            -o node.tar.gz \
-            "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz"
-
-          tar -xzf node.tar.gz -C "$NODE_DIR" --strip-components=1
-          echo "##vso[task.prependpath]$NODE_DIR/bin"
+      - task: Bash@3
         displayName: Install Node 12.14.1 manually
+        inputs:
+          targetType: inline
+          script: |
+            set -euxo pipefail
 
-      - script: |
-          set -e
-          npm install yarn -g
-          yarn install
-        displayName: "Install yarn"
+            NODE_VERSION=12.14.1
+            NODE_DIR="$AGENT_TEMPDIRECTORY/node"
+
+            mkdir -p "$NODE_DIR"
+
+            curl -L \
+              --connect-timeout 30 \
+              -o node.tar.gz \
+              "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz"
+
+            tar -xzf node.tar.gz -C "$NODE_DIR" --strip-components=1
+            echo "##vso[task.prependpath]$NODE_DIR/bin"
+
+      - task: Bash@3
+        displayName: Install yarn
+        inputs:
+          targetType: inline
+          script: |
+            set -e
+            npm install yarn -g
+            yarn install
         workingDirectory: $(frontendRoot)
 
-      - script: |
-          set -e
-          echo "REACT_APP_API_URL=%REACT_APP_API_URL%" > .env
-          echo "REACT_APP_ODIN_URL=%REACT_APP_ODIN_URL%" >> .env
-          yarn generate-api-client
-          yarn build
-        displayName: "Build application"
+      - task: Bash@3
+        displayName: Build application
+        inputs:
+          targetType: inline
+            script: |
+            set -e
+            echo "REACT_APP_API_URL=%REACT_APP_API_URL%" > .env
+            echo "REACT_APP_ODIN_URL=%REACT_APP_ODIN_URL%" >> .env
+            yarn generate-api-client
+            yarn build
         workingDirectory: $(frontendRoot)
 
-      - script: |
-          yarn test --passWithNoTests --coverage
-        displayName: "Run tests"
+      - task: Bash@3
+        displayName: Run tests
+        inputs:
+          targetType: inline
+            script: |
+              yarn test --passWithNoTests --coverage
         workingDirectory: $(frontendRoot)
 
       - task: ArchiveFiles@2
-        displayName: "Create build artifact (*.zip)"
+        displayName: Create zip artifact
         inputs:
-          rootFolderOrFile: "$(frontendRoot)/build"
+          rootFolderOrFile: $(frontendRoot)/build
           includeRootFolder: false
-          archiveType: "zip"
-          archiveFile: "$(Build.ArtifactStagingDirectory)/${{ parameters.serviceName }}_$(Build.BuildId).zip"
+          archiveType: zip
+          archiveFile: $(Build.ArtifactStagingDirectory)/${{ parameters.serviceName }}_$(Build.BuildId).zip
           replaceExistingArchive: true
 
       - task: PublishBuildArtifacts@1
+        displayName: Publish build artifacts
         inputs:
-          PathtoPublish: "$(Build.ArtifactStagingDirectory)"
-          ArtifactName: "${{ parameters.serviceName }}"
-          publishLocation: "Container"
+          PathtoPublish: $(Build.ArtifactStagingDirectory)
+          ArtifactName: ${{ parameters.serviceName }}
+          publishLocation: Container
 
       - task: Bash@3
-        displayName: "Get commit hash"
+        displayName: Get commit hash
         inputs:
-          targetType: "inline"
+          targetType: inline
           script: |
             GIT_SHA=$(git rev-parse --short=8 HEAD)
             echo "##vso[task.setvariable variable=GIT_SHA]$GIT_SHA"
@@ -91,9 +93,9 @@ jobs:
           workingDirectory: $(Build.SourcesDirectory)/fiek-met
 
       - task: CopyFiles@2
-        displayName: copy cicd files to publish
+        displayName: Copy CICD files to Docker context
         inputs:
-          sourceFolder: "$(Build.SourcesDirectory)/meteo-cicd/frontend"
+          sourceFolder: $(Build.SourcesDirectory)/meteo-cicd/frontend
           Contents: "**"
           targetFolder: $(frontendRoot)
           OverWrite: true
@@ -102,10 +104,10 @@ jobs:
         displayName: METEO METEO-ONPREM Push frontend docker image to Azure repository
         condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
         inputs:
-          containerRegistry: "svc-meteo-crmeteocommongwc01"
-          repository: "${{ parameters.serviceName }}"
-          command: "buildAndPush"
-          Dockerfile: "$(frontendRoot)/Dockerfile"
+          containerRegistry: svc-meteo-crmeteocommongwc01
+          repository: ${{ parameters.serviceName }}
+          command: buildAndPush
+          Dockerfile: $(frontendRoot)/Dockerfile
           tags: |
             latest
             $(GIT_SHA)
