@@ -15,17 +15,34 @@ jobs:
       - checkout: self
       - checkout: cicd
 
-      - bash: |
-          curl -w "\nDNS=%{time_namelookup}\nCONNECT=%{time_connect}\nTTFB=%{time_starttransfer}\nTOTAL=%{time_total}\n" \
-              -o /dev/null \
-              -s https://nodejs.org/dist/index.json
+      # - bash: |
+      #     curl -w "\nDNS=%{time_namelookup}\nCONNECT=%{time_connect}\nTTFB=%{time_starttransfer}\nTOTAL=%{time_total}\n" \
+      #         -o /dev/null \
+      #         -s https://nodejs.org/dist/index.json
 
-      - task: NodeTool@0
-        inputs:
-          versionSpec: 12.14.1
-          retryCountOnDownloadFails: '5'
-          delayBetweenRetries: '5000'
-        displayName: Install Node.js 12.14.1
+      # - task: NodeTool@0
+      #   inputs:
+      #     versionSpec: 12.14.1
+      #     retryCountOnDownloadFails: '5'
+      #     delayBetweenRetries: '5000'
+      #   displayName: Install Node.js 12.14.1
+
+      - bash: |
+          set -euxo pipefail
+
+          NODE_VERSION=12.14.1
+          NODE_DIR="$AGENT_TEMPDIRECTORY/node"
+
+          mkdir -p "$NODE_DIR"
+
+          curl -L \
+            --connect-timeout 30 \
+            -o node.tar.gz \
+            "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz"
+
+          tar -xzf node.tar.gz -C "$NODE_DIR" --strip-components=1
+          echo "##vso[task.prependpath]$NODE_DIR/bin"
+        displayName: Install Node 12.14.1 manually
 
       - script: |
           set -e
