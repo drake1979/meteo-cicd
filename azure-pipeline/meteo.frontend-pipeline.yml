@@ -44,27 +44,27 @@ jobs:
             set -e
             npm install yarn -g
             yarn install
-        workingDirectory: $(frontendRoot)
+          workingDirectory: $(frontendRoot)
 
       - task: Bash@3
         displayName: Build application
         inputs:
           targetType: inline
-            script: |
+          script: |
             set -e
             echo "REACT_APP_API_URL=%REACT_APP_API_URL%" > .env
             echo "REACT_APP_ODIN_URL=%REACT_APP_ODIN_URL%" >> .env
             yarn generate-api-client
             yarn build
-        workingDirectory: $(frontendRoot)
+          workingDirectory: $(frontendRoot)
 
       - task: Bash@3
         displayName: Run tests
         inputs:
           targetType: inline
-            script: |
-              yarn test --passWithNoTests --coverage
-        workingDirectory: $(frontendRoot)
+          script: |
+            yarn test --passWithNoTests --coverage
+          workingDirectory: $(frontendRoot)
 
       - task: ArchiveFiles@2
         displayName: Create zip artifact
