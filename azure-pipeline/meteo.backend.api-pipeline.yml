@@ -8,6 +8,8 @@ jobs:
     displayName: ${{ parameters.serviceName }} build and publish
 
     variables:
+      dependencyScanningInjectionEnabled: false  # Azure Devops feature override
+      DependencyScanning.Skip: true
       buildConfiguration: Release
       dotnetRoot: $(Build.SourcesDirectory)/fiek-met/backend
 
