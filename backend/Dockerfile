@@ -1,10 +1,14 @@
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
-RUN apt-get update && apt-get install libnetcdf-dev dos2unix -y
+FROM mcr.microsoft.com/dotnet/aspnet:6.0-bookworm-slim AS base
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libnetcdf-dev \
+        dos2unix \
+    && rm -rf /var/lib/apt/lists/*
 
 EXPOSE 80
 EXPOSE 443
 
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:6.0-bookworm-slim AS build
 WORKDIR /src
 COPY FIEK.MET.Backend.sln .
 
