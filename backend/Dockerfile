@@ -3,6 +3,10 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         libnetcdf-dev \
         dos2unix \
+        fontconfig \
+        fonts-dejavu-core \
+        fonts-liberation \
+    && fc-cache -f -v \
     && rm -rf /var/lib/apt/lists/*
 
 EXPOSE 80
