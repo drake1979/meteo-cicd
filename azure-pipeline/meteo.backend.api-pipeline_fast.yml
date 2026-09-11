@@ -97,7 +97,7 @@ jobs:
           containerRegistry: svc-meteo-crmeteocommongwc01
           repository: ${{ parameters.serviceName }}
           command: buildAndPush
-          Dockerfile: $(dotnetRoot)/Dockerfile
+          Dockerfile: $(dotnetRoot)/Dockerfile.fast
           tags: |
             latest
             $(GIT_SHA)
