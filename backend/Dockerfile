@@ -6,6 +6,10 @@ RUN apt-get update \
         fontconfig \
         fonts-dejavu-core \
         fonts-liberation \
+    && ln -sf /lib/x86_64-linux-gnu/libdl.so.2 \
+              /lib/x86_64-linux-gnu/libdl.so \
+    && test -L /lib/x86_64-linux-gnu/libdl.so \
+    && ls -la /lib/x86_64-linux-gnu/libdl.so \
     && fc-cache -f -v \
     && rm -rf /var/lib/apt/lists/*
 
